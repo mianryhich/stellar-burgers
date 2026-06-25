@@ -86,7 +86,9 @@ const App = () => {
             ingredients.length > 0 ? (
               <ConstructorPage />
             ) : (
-              <div className={`${styles.title} text text_type_main-medium pt-4`}>
+              <div
+                className={`${styles.title} text text_type_main-medium pt-4`}
+              >
                 Нет ингредиентов
               </div>
             )
@@ -144,10 +146,7 @@ const App = () => {
           />
           <Route
             element={
-              <ProtectedRoute
-                onlyForAuth
-                isAuthenticated={isAuthenticated}
-              />
+              <ProtectedRoute onlyForAuth isAuthenticated={isAuthenticated} />
             }
           >
             <Route

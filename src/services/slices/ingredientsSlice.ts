@@ -4,22 +4,27 @@ import { TIngredient } from '@utils-types';
 import type { RootState } from '../store';
 
 type TIngredientsState = {
-  ingredients: TIngredient[];
+  items: TIngredient[];
   isLoading: boolean;
   error: string | null;
 };
 
 const initialState: TIngredientsState = {
-  ingredients: [],
+  items: [],
   isLoading: false,
   error: null
 };
 
 export const fetchIngredients = createAsyncThunk<TIngredient[]>(
-  'ingredients/fetchIngredients',
-  async () => {
-    const data = await getIngredientsApi();
-    return data;
+  'ingredients/fetchAll',
+  async (_, { rejectWithValue }) => {
+    try {
+      return await getIngredientsApi();
+    } catch (err) {
+      return rejectWithValue(
+        (err as Error).message ?? 'Ошибка загрузки ингредиентов'
+      );
+    }
   }
 );
 
@@ -35,19 +40,24 @@ const ingredientsSlice = createSlice({
       })
       .addCase(fetchIngredients.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.ingredients = action.payload;
+        state.items = action.payload;
       })
       .addCase(fetchIngredients.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.error.message || 'Ошибка загрузки ингредиентов';
+        state.error = action.payload as string;
       });
   }
 });
 
-export const ingredientsReducer = ingredientsSlice.reducer;
+export default ingredientsSlice.reducer;
 
-export const selectIngredients = (state: RootState) => state.ingredients.ingredients;
-export const selectIngredientsLoading = (state: RootState) => state.ingredients.isLoading;
-export const selectIngredientsError = (state: RootState) => state.ingredients.error;
+export const selectIngredients = (state: RootState) => state.ingredients.items;
+
+export const selectIngredientsLoading = (state: RootState) =>
+  state.ingredients.isLoading;
+
+export const selectIngredientsError = (state: RootState) =>
+  state.ingredients.error;
+
 export const selectIngredientById = (id: string) => (state: RootState) =>
-  state.ingredients.ingredients.find((ing) => ing._id === id) ?? null;
+  state.ingredients.items.find((ing) => ing._id === id) ?? null;

@@ -8,10 +8,11 @@ import { TIngredient } from '@utils-types';
 
 export const IngredientDetails: FC = () => {
   const { id } = useParams();
-  
+
   const ingredients = useSelector(selectIngredients);
-  
-  const ingredientData = ingredients.find((item: TIngredient) => item._id === id) || null;
+
+  const ingredientData =
+    ingredients.find((item: TIngredient) => item._id === id) || null;
 
   if (!ingredientData) {
     return <Preloader />;
