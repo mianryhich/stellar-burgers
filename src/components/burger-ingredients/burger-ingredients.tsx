@@ -7,10 +7,8 @@ import { BurgerIngredientsUI } from '../ui/burger-ingredients';
 import { TIngredient } from '@utils-types';
 
 export const BurgerIngredients: FC = () => {
-  // Получаем ингредиенты из стора
   const ingredients = useSelector(selectIngredients);
 
-  // Фильтруем ингредиенты по типу
   const buns = ingredients.filter((item: TIngredient) => item.type === 'bun');
   const mains = ingredients.filter((item: TIngredient) => item.type === 'main');
   const sauces = ingredients.filter(
@@ -54,7 +52,6 @@ export const BurgerIngredients: FC = () => {
       titleSaucesRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // Убираем return null и возвращаем компонент
   return (
     <BurgerIngredientsUI
       currentTab={currentTab}

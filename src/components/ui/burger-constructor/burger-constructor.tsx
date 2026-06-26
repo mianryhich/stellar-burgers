@@ -18,7 +18,6 @@ export const BurgerConstructorUI: FC<BurgerConstructorUIProps> = ({
   onOrderClick,
   closeOrderModal
 }) => {
-  // Безопасная проверка
   const ingredients = constructorItems?.ingredients || [];
 
   return (
@@ -42,16 +41,14 @@ export const BurgerConstructorUI: FC<BurgerConstructorUIProps> = ({
       )}
       <ul className={styles.elements}>
         {ingredients.length > 0 ? (
-          ingredients.map(
-            (item: TConstructorIngredient, index: number) => (
-              <BurgerConstructorElement
-                ingredient={item}
-                index={index}
-                totalItems={ingredients.length}
-                key={item.id}
-              />
-            )
-          )
+          ingredients.map((item: TConstructorIngredient, index: number) => (
+            <BurgerConstructorElement
+              ingredient={item}
+              index={index}
+              totalItems={ingredients.length}
+              key={item.id}
+            />
+          ))
         ) : (
           <div
             className={`${styles.noBuns} ml-8 mb-4 mr-5 text text_type_main-default`}

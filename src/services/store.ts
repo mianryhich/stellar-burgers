@@ -11,6 +11,7 @@ import orderReducer from './slices/orderSlice';
 import feedReducer from './slices/feedSlice';
 import userReducer from './slices/userSlice';
 import userOrdersReducer from './slices/userOrdersSlice';
+import { profileOrdersReducer } from './slices/profileOrdersSlice';
 
 export const rootReducer = combineReducers({
   ingredients: ingredientsReducer,
@@ -18,7 +19,8 @@ export const rootReducer = combineReducers({
   order: orderReducer,
   feed: feedReducer,
   user: userReducer,
-  userOrders: userOrdersReducer
+  userOrders: userOrdersReducer,
+  profileOrders: profileOrdersReducer
 });
 
 const store = configureStore({

@@ -54,7 +54,6 @@ const App = () => {
     dispatch(checkUserAuth());
   }, [dispatch]);
 
-  // Единый Preloader для всех загрузок
   if (!isAuthChecked || isIngredientsLoading) {
     return (
       <div className={styles.app}>
