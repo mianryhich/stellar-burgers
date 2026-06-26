@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from '../../services/store';
+
 import '../../index.css';
 import styles from './app.module.css';
 
@@ -29,15 +30,13 @@ import {
 
 import {
   checkUserAuth,
-  selectIsAuthChecked,
-  selectIsAuthenticated
+  selectIsAuthChecked
 } from '../../services/slices/userSlice';
 
 const App = () => {
   const dispatch = useDispatch();
 
   const isAuthChecked = useSelector(selectIsAuthChecked);
-  const isAuthenticated = useSelector(selectIsAuthenticated);
   const ingredients = useSelector(selectIngredients);
   const isIngredientsLoading = useSelector(selectIngredientsLoading);
   const error = useSelector(selectIngredientsError);
@@ -95,25 +94,14 @@ const App = () => {
         />
         <Route path='/feed' element={<Feed />} />
 
-        <Route
-          element={
-            <ProtectedRoute
-              onlyForAuth={false}
-              isAuthenticated={isAuthenticated}
-            />
-          }
-        >
+        <Route element={<ProtectedRoute onlyForAuth={false} />}>
           <Route path='/login' element={<Login />} />
           <Route path='/register' element={<Register />} />
           <Route path='/forgot-password' element={<ForgotPassword />} />
           <Route path='/reset-password' element={<ResetPassword />} />
         </Route>
 
-        <Route
-          element={
-            <ProtectedRoute onlyForAuth isAuthenticated={isAuthenticated} />
-          }
-        >
+        <Route element={<ProtectedRoute onlyForAuth />}>
           <Route path='/profile' element={<Profile />} />
           <Route path='/profile/orders' element={<ProfileOrders />} />
           <Route path='/profile/orders/:number' element={<OrderInfo />} />
@@ -143,11 +131,7 @@ const App = () => {
               </Modal>
             }
           />
-          <Route
-            element={
-              <ProtectedRoute onlyForAuth isAuthenticated={isAuthenticated} />
-            }
-          >
+          <Route element={<ProtectedRoute onlyForAuth />}>
             <Route
               path='/profile/orders/:number'
               element={

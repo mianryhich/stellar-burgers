@@ -6,6 +6,10 @@ import { selectFeedOrders, fetchFeeds } from '../../services/slices/feedSlice';
 import { Preloader } from '../ui/preloader';
 import { OrderInfoUI } from '../ui/order-info';
 import { TIngredient } from '@utils-types';
+import {
+  getOrderByNumber,
+  selectOrderByNumber
+} from '../../services/slices/orderSlice';
 
 export const OrderInfo: FC = () => {
   const dispatch = useDispatch();
@@ -13,25 +17,27 @@ export const OrderInfo: FC = () => {
 
   const ingredients = useSelector(selectIngredients);
   const feedOrders = useSelector(selectFeedOrders);
+  const orderByNumber = useSelector(selectOrderByNumber);
 
   const orderData = feedOrders.find((order) => String(order.number) === number);
+  const finalOrderData = orderData || orderByNumber;
 
   useEffect(() => {
-    if (!orderData && ingredients.length > 0) {
-      dispatch(fetchFeeds());
+    if (!finalOrderData && number) {
+      dispatch(getOrderByNumber(Number(number)));
     }
-  }, [orderData, ingredients, dispatch]);
+  }, [dispatch, finalOrderData, number]);
 
   const orderInfo = useMemo(() => {
-    if (!orderData || !ingredients.length) return null;
+    if (!finalOrderData || !ingredients.length) return null;
 
-    const date = new Date(orderData.createdAt);
+    const date = new Date(finalOrderData.createdAt);
 
     type TIngredientsWithCount = {
       [key: string]: TIngredient & { count: number };
     };
 
-    const ingredientsInfo = orderData.ingredients.reduce(
+    const ingredientsInfo = finalOrderData.ingredients.reduce(
       (acc: TIngredientsWithCount, item) => {
         if (!acc[item]) {
           const ingredient = ingredients.find((ing) => ing._id === item);
@@ -56,12 +62,12 @@ export const OrderInfo: FC = () => {
     );
 
     return {
-      ...orderData,
+      ...finalOrderData,
       ingredientsInfo,
       date,
       total
     };
-  }, [orderData, ingredients]);
+  }, [finalOrderData, ingredients]);
 
   if (!orderInfo) {
     return <Preloader />;
