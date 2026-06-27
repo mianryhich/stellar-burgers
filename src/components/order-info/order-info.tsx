@@ -8,7 +8,8 @@ import { OrderInfoUI } from '../ui/order-info';
 import { TIngredient } from '@utils-types';
 import {
   getOrderByNumber,
-  selectOrderByNumber
+  selectOrderByNumber,
+  clearOrderByNumber
 } from '../../services/slices/orderSlice';
 
 export const OrderInfo: FC = () => {
@@ -20,13 +21,19 @@ export const OrderInfo: FC = () => {
   const orderByNumber = useSelector(selectOrderByNumber);
 
   const orderData = feedOrders.find((order) => String(order.number) === number);
+
   const finalOrderData = orderData || orderByNumber;
 
+  // Очищаем предыдущий заказ при смене номера
   useEffect(() => {
-    if (!finalOrderData && number) {
+    dispatch(clearOrderByNumber());
+  }, [number, dispatch]);
+
+  useEffect(() => {
+    if (!orderData && number) {
       dispatch(getOrderByNumber(Number(number)));
     }
-  }, [dispatch, finalOrderData, number]);
+  }, [dispatch, orderData, number]);
 
   const orderInfo = useMemo(() => {
     if (!finalOrderData || !ingredients.length) return null;
