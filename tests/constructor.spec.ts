@@ -24,65 +24,6 @@ const setupOrderHar = async (page: Page) => {
   });
 };
 
-const setupAuthTokens = async (context: BrowserContext, page: Page) => {
-  await context.addCookies([
-    {
-      name: 'accessToken',
-      value: 'Bearer test-token',
-      domain: 'localhost',
-      path: '/'
-    }
-  ]);
-  await page.addInitScript(() => {
-    localStorage.setItem('refreshToken', 'test-refresh-token');
-  });
-};
-
-const clearAuthTokens = async (context: BrowserContext, page: Page) => {
-  await context.clearCookies();
-  await page.evaluate(() => localStorage.removeItem('refreshToken'));
-};
-
-const setupDirectAuthMocks = async (page: Page) => {
-  await page.route('**/api/auth/user', async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({
-        success: true,
-        user: {
-          email: 'test@test.ru',
-          name: 'Тест'
-        }
-      })
-    });
-  });
-
-  await page.route('**/api/orders', async (route) => {
-    if (route.request().method() === 'POST') {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          success: true,
-          name: 'Тестовый бургер',
-          order: {
-            _id: '1',
-            status: 'done',
-            name: 'Тестовый бургер',
-            createdAt: '2025-01-01',
-            updatedAt: '2025-01-01',
-            number: 107375,
-            ingredients: []
-          }
-        })
-      });
-      return;
-    }
-    await route.fallback();
-  });
-};
-
 test.describe('Страница конструктора бургера', () => {
   test.beforeEach(async ({ page }) => {
     await setupIngredientsHar(page);
@@ -97,18 +38,28 @@ test.describe('Страница конструктора бургера', () => 
 
       await expect(page.getByText('Соберите бургер')).toBeVisible();
 
-      const bunCard = page.locator('li').filter({ hasText: BUN_NAME });
+      const bunCard = page
+        .getByTestId('ingredients-list')
+        .locator('li')
+        .filter({ hasText: BUN_NAME });
       await bunCard.getByRole('button', { name: 'Добавить' }).click();
 
-      await expect(page.getByText(`${BUN_NAME} (верх)`)).toBeVisible();
-      await expect(page.getByText(`${BUN_NAME} (низ)`)).toBeVisible();
+      await expect(page.getByTestId('constructor-bun-top')).toBeVisible();
+      await expect(page.getByTestId('constructor-bun-top')).toContainText(
+        BUN_NAME
+      );
+      await expect(page.getByTestId('constructor-bun-bottom')).toBeVisible();
+      await expect(page.getByTestId('constructor-bun-bottom')).toContainText(
+        BUN_NAME
+      );
 
-      const mainCard = page.locator('li').filter({ hasText: MAIN_NAME });
+      const mainCard = page
+        .getByTestId('ingredients-list')
+        .locator('li')
+        .filter({ hasText: MAIN_NAME });
       await mainCard.getByRole('button', { name: 'Добавить' }).click();
 
-      const constructor = page.locator('section').filter({
-        has: page.getByRole('button', { name: 'Оформить заказ' })
-      });
+      const constructor = page.getByTestId('constructor');
       await expect(constructor.getByText(MAIN_NAME)).toBeVisible();
     });
   });
@@ -120,46 +71,55 @@ test.describe('Страница конструктора бургера', () => 
       await page.goto('/');
       await page.waitForLoadState('networkidle');
 
-      await page.getByRole('link', { name: MAIN_NAME }).click();
+      const ingredient = page
+        .getByTestId('ingredients-list')
+        .locator('li')
+        .filter({ hasText: MAIN_NAME });
+      await ingredient.click();
 
-      const modals = page.locator('#modals');
-      await expect(
-        modals.getByRole('heading', { name: MAIN_NAME }).first()
-      ).toBeVisible();
-      await expect(modals.getByText('4242')).toBeVisible();
-      await expect(modals.getByText('420')).toBeVisible();
+      const modal = page.getByTestId('modal');
+      await expect(modal).toBeVisible();
+      await expect(modal).toContainText(MAIN_NAME);
+      await expect(modal).toContainText('4242');
+      await expect(modal).toContainText('420');
     });
 
     test('закрывается по клику на крестик', async ({ page }) => {
       await page.goto('/');
       await page.waitForLoadState('networkidle');
 
-      await page.getByRole('link', { name: BUN_NAME }).click();
+      const ingredient = page
+        .getByTestId('ingredients-list')
+        .locator('li')
+        .filter({ hasText: BUN_NAME });
+      await ingredient.click();
 
-      const modals = page.locator('#modals');
-      await expect(
-        modals.getByRole('heading', { name: BUN_NAME }).first()
-      ).toBeVisible();
+      const modal = page.getByTestId('modal');
+      await expect(modal).toBeVisible();
 
-      await modals.locator('button').click();
-
-      await expect(modals).toBeEmpty();
+      await page.getByTestId('modal-close-btn').click();
+      await expect(modal).not.toBeVisible();
     });
 
     test('закрывается по клику на оверлей', async ({ page }) => {
       await page.goto('/');
       await page.waitForLoadState('networkidle');
 
-      await page.getByRole('link', { name: BUN_NAME }).click();
+      const ingredient = page
+        .getByTestId('ingredients-list')
+        .locator('li')
+        .filter({ hasText: BUN_NAME });
+      await ingredient.click();
 
-      const modals = page.locator('#modals');
-      await expect(
-        modals.getByRole('heading', { name: BUN_NAME }).first()
-      ).toBeVisible();
+      const modal = page.getByTestId('modal');
+      await expect(modal).toBeVisible();
 
-      await page.mouse.click(10, 10);
+      const overlay = page.getByTestId('modal-overlay');
+      await expect(overlay).toBeVisible();
 
-      await expect(modals).toBeEmpty();
+      await overlay.click({ force: true, position: { x: 5, y: 5 } });
+
+      await expect(modal).not.toBeVisible();
     });
   });
 
@@ -180,107 +140,48 @@ test.describe('Страница конструктора бургера', () => 
         }
       ]);
 
-      await page.route('**/api/auth/user', async (route) => {
-        await route.fulfill({
-          status: 200,
-          contentType: 'application/json',
-          body: JSON.stringify({
-            success: true,
-            user: {
-              email: 'test@test.ru',
-              name: 'Тест'
-            }
-          })
-        });
-      });
-
-      // Мокаем запрос на создание заказа
-      await page.route('**/api/orders', async (route) => {
-        if (route.request().method() === 'POST') {
-          await route.fulfill({
-            status: 200,
-            contentType: 'application/json',
-            body: JSON.stringify({
-              success: true,
-              name: 'Тестовый бургер',
-              order: {
-                _id: '1',
-                status: 'done',
-                name: 'Тестовый бургер',
-                createdAt: '2025-01-01',
-                updatedAt: '2025-01-01',
-                number: 99999,
-                ingredients: []
-              }
-            })
-          });
-          return;
-        }
-        await route.fallback();
-      });
-
-      await page.route('**/api/ingredients', async (route) => {
-        await route.fulfill({
-          status: 200,
-          contentType: 'application/json',
-          body: JSON.stringify({
-            success: true,
-            data: [
-              {
-                _id: 'bun-1',
-                name: 'Краторная булка N-200i',
-                type: 'bun',
-                proteins: 80,
-                fat: 24,
-                carbohydrates: 53,
-                calories: 420,
-                price: 1255,
-                image: 'https://code.s3.yandex.net/react/code/bun-02.png',
-                image_mobile: 'https://code.s3.yandex.net/react/code/bun-02-mobile.png',
-                image_large: 'https://code.s3.yandex.net/react/code/bun-02-large.png'
-              },
-              {
-                _id: 'main-1',
-                name: 'Биокотлета из марсианской Магнолии',
-                type: 'main',
-                proteins: 420,
-                fat: 142,
-                carbohydrates: 242,
-                calories: 4242,
-                price: 424,
-                image: 'https://code.s3.yandex.net/react/code/meat-01.png',
-                image_mobile: 'https://code.s3.yandex.net/react/code/meat-01-mobile.png',
-                image_large: 'https://code.s3.yandex.net/react/code/meat-01-large.png'
-              }
-            ]
-          })
-        });
-      });
+      await setupIngredientsHar(page);
+      await setupAuthHar(page);
+      await setupOrderHar(page);
 
       await page.goto('/');
       await page.waitForLoadState('networkidle');
 
       await expect(page.getByText('Соберите бургер')).toBeVisible();
 
-      const bunCard = page.locator('li').filter({ hasText: 'Краторная булка N-200i' });
+      const bunCard = page
+        .getByTestId('ingredients-list')
+        .locator('li')
+        .filter({ hasText: BUN_NAME });
       await bunCard.getByRole('button', { name: 'Добавить' }).click();
-      const mainCard = page.locator('li').filter({ hasText: 'Биокотлета из марсианской Магнолии' });
+
+      const mainCard = page
+        .getByTestId('ingredients-list')
+        .locator('li')
+        .filter({ hasText: MAIN_NAME });
       await mainCard.getByRole('button', { name: 'Добавить' }).click();
 
-      await page.getByRole('button', { name: 'Оформить заказ' }).click();
+      await page.getByTestId('create-order-btn').click();
 
-      await page.waitForSelector('.text_type_digits-large', { timeout: 20000 });
+      const modal = page.getByTestId('modal');
+      await expect(modal).toBeVisible({ timeout: 20000 });
 
-      const orderNumber = page.locator('.text_type_digits-large');
+      const orderNumber = modal.locator('.text_type_digits-large');
       await expect(orderNumber).toBeVisible();
+      const orderNumberText = await orderNumber.textContent();
+      expect(Number(orderNumberText)).toBeGreaterThan(0);
 
-      await expect(orderNumber).toHaveText('99999');
-      await expect(page.getByText('идентификатор заказа')).toBeVisible();
+      await page.getByTestId('modal-close-btn').click();
+      await expect(modal).not.toBeVisible();
 
-      await page.locator('#modals button').click();
-
-      await expect(page.getByText('Выберите начинку')).toBeVisible();
-      await expect(page.getByText('Выберите булки').first()).toBeVisible();
+      await expect(page.getByTestId('constructor-bun-top')).not.toBeVisible();
+      await expect(
+        page.getByTestId('constructor-bun-bottom')
+      ).not.toBeVisible();
+      await expect(page.getByTestId('constructor-empty-bun')).toBeVisible();
+      await expect(
+        page.getByTestId('constructor-empty-ingredients')
+      ).toBeVisible();
 
       await context.clearCookies();
       await page.evaluate(() => localStorage.clear());

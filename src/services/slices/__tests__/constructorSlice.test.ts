@@ -5,7 +5,8 @@ import constructorReducer, {
   clearConstructor,
   selectConstructorItems,
   selectConstructorBun,
-  selectConstructorIngredients
+  selectConstructorIngredients,
+  initialState
 } from '../constructorSlice';
 import { TIngredient } from '@utils-types';
 import { RootState } from '../../store';
@@ -53,14 +54,9 @@ const sauce: TIngredient = {
 };
 
 describe('constructorSlice', () => {
-  const initialState = {
-    bun: null,
-    ingredients: []
-  };
-
   it('должен возвращать начальное состояние при неизвестном экшене', () => {
     const state = constructorReducer(undefined, { type: 'UNKNOWN' });
-    expect(state).toEqual(initialState);
+    expect(state).toEqual(initialState); // <-- используем импортированный initialState
   });
 
   describe('addIngredient', () => {

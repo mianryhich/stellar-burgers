@@ -3,7 +3,8 @@ import ingredientsReducer, {
   selectIngredients,
   selectIngredientsLoading,
   selectIngredientsError,
-  selectIngredientById
+  selectIngredientById,
+  initialState
 } from '../ingredientsSlice';
 import { RootState } from '../../store';
 
@@ -25,11 +26,6 @@ const mockIngredients = [
 ];
 
 describe('ingredientsSlice', () => {
-  const initialState = {
-    items: [],
-    isLoading: false,
-    error: null
-  };
 
   it('должен возвращать начальное состояние при неизвестном экшене', () => {
     const state = ingredientsReducer(undefined, { type: 'UNKNOWN' });
